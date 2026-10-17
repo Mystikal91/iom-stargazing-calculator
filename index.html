@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IOM Stargazing Calculator</title>
+  <meta name="theme-color" content="#12141c">
+  <meta name="description" content="Find the best Star to level up in Idle Obelisk Miner for Stars/hour or Super Stars/hour.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Idle Obelisk Miner &mdash; Stargazing Calculator</h1>
+    <p class="sub">Paste your exported stats, pick the stat you want to improve, and see which upgrade pays off fastest.
+      Costs are compared by the <strong>time needed to collect them</strong>.</p>
+  </header>
+
+  <main>
+    <section class="card" id="import">
+      <h2>1. Import your stats</h2>
+      <p class="hint">In game: <em>Stats &rarr; Export Stats to JSON</em> (it is copied to the clipboard), then paste it below.</p>
+      <textarea id="json-input" rows="5" spellcheck="false" placeholder='{"time": ..., "stats": {...}, "version": "..."}'></textarea>
+      <div class="row">
+        <button id="btn-paste" type="button">Paste from clipboard</button>
+        <label class="btn" for="file-input">Load .json file</label>
+        <input type="file" id="file-input" accept=".json,.txt,application/json" hidden>
+        <button id="btn-clear" type="button" class="ghost">Clear</button>
+        <span id="import-status" class="status" role="status"></span>
+      </div>
+    </section>
+
+    <section class="card" id="settings" hidden>
+      <h2>2. What do you want to improve?</h2>
+      <div class="row goals">
+        <label class="choice"><input type="radio" name="metric" value="stars" checked> Stars / hour</label>
+        <label class="choice"><input type="radio" name="metric" value="superStars"> Super Stars / hour</label>
+      </div>
+      <div class="grid">
+        <label>Floor clears per minute
+          <input type="number" inputmode="decimal" id="floors" min="0.01" step="any" value="48">
+          <small>Base game speed is 48 floors/min. Only changes the displayed hours, not the ranking.</small>
+        </label>
+        <label>Play mode
+          <select id="mode">
+            <option value="online">Online (game open)</option>
+            <option value="offline">Offline (idle progress, &times;0.85)</option>
+          </select>
+          <small>Offline: nothing is tapped, so only auto-catch counts, and the game applies a &times;0.85 penalty.</small>
+        </label>
+        <label id="ctrlf-label" hidden>Ctrl+F 'Stars' skill
+          <select id="ctrlf">
+            <option value="yes">Owned and following (full offline gains)</option>
+            <option value="no">Not owned / not following (&times;0.2)</option>
+          </select>
+          <small id="ctrlf-hint">Without following, offline Star gains are 1/5.</small>
+        </label>
+        <label>Catching
+          <select id="catch">
+            <option value="manual">I tap every Star (100% caught)</option>
+            <option value="auto">Idle: only auto-catch</option>
+          </select>
+          <small>Idle mode makes Taurus and Auto-catch matter. Forced to auto-catch when offline.</small>
+        </label>
+      </div>
+    </section>
+
+    <section class="card" id="results" hidden>
+      <h2>3. Best upgrades</h2>
+      <div id="current" class="current"></div>
+      <div class="table-wrap">
+        <table id="result-table">
+          <thead>
+            <tr><th>#</th><th>Upgrade</th><th class="num">Cost</th><th class="num">Time to collect</th>
+                <th class="num" id="gain-head">Gain</th><th class="num">Gain per hour</th><th class="num">vs best</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="hint">Ranking = relative gain divided by the hours needed to collect the cost. Costs in a Star's own currency are
+        converted to hours with your Stars/hour; Super Star costs with your Super Stars/hour.</p>
+      <details id="notes"><summary>Not ranked</summary><div id="notes-body"></div></details>
+    </section>
+
+    <section class="card" id="data" hidden>
+      <h2>Detected data <small>(editable)</small></h2>
+      <p class="hint">Change a value to run a what-if, or fill in a stat that was missing from the export. Edited values are highlighted.</p>
+      <details>
+        <summary>Star stats</summary>
+        <div class="grid compact" id="stat-grid"></div>
+      </details>
+      <details>
+        <summary>Star levels &amp; level caps</summary>
+        <p class="hint">Caps include the base cap and the Super Star cap upgrades. Add other sources (Skill-Tree, fishing tributes, statues, Black Hole&hellip;) by editing the cap.</p>
+        <div class="table-wrap"><table id="star-table"><thead><tr><th>Star</th><th class="num">Level (0 = locked)</th><th class="num">Max level</th></tr></thead><tbody></tbody></table></div>
+      </details>
+      <details>
+        <summary>Assumptions</summary>
+        <ul class="assump">
+          <li>Per floor clear a Star spawns with chance 1/50 &times; Star Spawn Rate; a Super Star appears with chance 1/100 &times; Super Star Spawn Rate for each Star spawn.</li>
+          <li>Double and Triple Star are independent rolls that multiply (both = 6 Stars, only Triple = 3, only Double = 2); extra Stars don't roll again. Super Star Triple and 10x are assumed to work the same way.</li>
+          <li>Supernova, Supergiant and Radiant are independent; Novagiant Combo applies when both Supernova and Supergiant hit.</li>
+          <li>Stargazing sources are additive with each other and multiply the rest of your stat (derived from your export: e.g. Star Spawn Rate = (1 + 2%&times;Gemini + 5%&times;upgrade) &times; other sources).</li>
+          <li>Scorpio and the All Star Multiplier upgrade multiply each other, as shown on the wiki's Stats page.</li>
+          <li>Offline = the same calculation with auto-catch only, multiplied by 0.85 (it scales both rates equally, so it only changes times).</li>
+          <li>Offline with the Ctrl+F skill assumes all 5 floors of your Star are unlocked; the wiki scales gains by (floors unlocked / 5), which this tool does not know.</li>
+          <li>You follow your Star every rotation (full gain). Every Star currency is collected at the same rate.</li>
+          <li>Telescope upgrades paid in veins cannot be compared and are listed as not ranked. Cosmic Candy is not modelled.</li>
+        </ul>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    Unofficial fan tool. Data from the <a href="https://shminer.miraheze.org/wiki/Stargazing">Idle Obelisk Miner wiki</a> (game v2.2.30).
+    Everything runs in your browser; nothing is uploaded.
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/model.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
