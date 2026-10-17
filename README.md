@@ -54,9 +54,9 @@ Star costs follow the wiki's `CostTable` parameters (base, scaling, per-level ov
 Data comes from the [Stargazing](https://shminer.miraheze.org/wiki/Stargazing) and [Stats](https://shminer.miraheze.org/wiki/Stats#Stars)
 wiki pages (game v2.2.30). When the game changes, update the corresponding entries in `data.js`.
 
-## Publishing on GitHub Pages
+## AI Usage
 
-Repository **Settings → Pages → Build and deployment → Deploy from a branch → `main` / `/ (root)`**.
+I basically vibe coded this entire project with Claude. I know it's bad, but it's a side project for a game, be gentle
 
 ---
 
