@@ -136,7 +136,7 @@
       const rel = best > 0 ? r.score / best : 0;
       tr.innerHTML =
         '<td class="rank">' + (i + 1) + '</td>' +
-        '<td class="name">' + r.label + ' <span class="tag">' + lv + '</span></td>' +
+        '<td class="name">' + r.label + ' <span class="tag">' + lv + '</span>' + (r.detail ? '<span class="detail">' + r.detail + '</span>' : '') + '</td>' +
         '<td class="num" data-label="Cost">' + fmt(r.cost) + ' ' + r.currency + '</td>' +
         '<td class="num" data-label="Time to collect">' + fmtTime(r.hours) + '</td>' +
         '<td class="num" data-label="' + (isStars ? 'Stars/h gain' : 'Super Stars/h gain') + '">+' + pct(r.gain) + '</td>' +

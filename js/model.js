@@ -143,6 +143,17 @@
     return caps;
   }
 
+  // ---- Star unlock order -----------------------------------------------------
+  function unlockOrderLength() { return IOM.FIXED_START.length + IOM.RANDOM_GROUP.length + IOM.FIXED_END.length; }
+
+  /** Stars that the k-th Telescope level can make available (a single one outside the random 4th-11th range). */
+  function unlockCandidates(k, state) {
+    const a = IOM.FIXED_START.length, b = a + IOM.RANDOM_GROUP.length;
+    if (k <= a) return [IOM.FIXED_START[k - 1]].filter(n => !state.lvl[n]);
+    if (k <= b) return IOM.RANDOM_GROUP.filter(n => !state.lvl[n]);
+    return [IOM.FIXED_END[k - b - 1]].filter(n => n && !state.lvl[n]);
+  }
+
   // ---- Candidate upgrades ---------------------------------------------------
   /**
    * opts: { metric: 'stars'|'superStars', floorsPerHour, catchMode, offline, ctrlF }
@@ -156,16 +167,23 @@
     const metricOf = inc => inc[opts.metric];
     const m0 = metricOf(cur);
 
+    // `c.apply` mutates a copy of the state; `c.variants` (optional) is a list of such functions whose
+    // gains are averaged (used when the outcome is random, e.g. which Star the Telescope unlocks).
     function consider(c) {
-      const st1 = { lvl: Object.assign({}, state.lvl), reg: state.reg.slice(), ss: state.ss.slice() };
-      c.apply(st1);
-      const inc1 = income(effectiveStats(base, state, st1), opts);
-      const gain = m0 > 0 ? metricOf(inc1) / m0 - 1 : 0;
+      const outcomes = c.variants || [c.apply];
+      let gain = 0;
+      for (const apply of outcomes) {
+        const st1 = { lvl: Object.assign({}, state.lvl), reg: state.reg.slice(), ss: state.ss.slice() };
+        apply(st1);
+        const inc1 = income(effectiveStats(base, state, st1), opts);
+        gain += m0 > 0 ? metricOf(inc1) / m0 - 1 : 0;
+      }
+      gain /= outcomes.length;
       const rate = c.currency === 'Super Star' ? cur.superStars : cur.stars;
       const hours = rate > 0 ? c.cost / rate : Infinity;
       rows.push({ label: c.label, currency: c.currency, cost: c.cost, hours, gain,
                   score: hours > 0 && isFinite(hours) ? gain / hours : 0,
-                  from: c.from, to: c.to, kind: c.kind });
+                  from: c.from, to: c.to, kind: c.kind, detail: c.detail });
     }
 
     // Star levels
@@ -197,6 +215,7 @@
 
     // Telescope upgrades: only the levels paid in Super Stars can be compared.
     IOM.REG_UPGRADES.forEach((u, i) => {
+      if (u.unlocksStar) { telescopeUpgrade(u, i); return; }
       if (!u.effects || !u.effects.length) return;
       const L = state.reg[i] || 0;
       if (L >= u.max) { unavailable.push(u.name + ': maxed'); return; }
@@ -206,6 +225,20 @@
       consider({ label: u.name, kind: 'tele', currency: 'Super Star', cost: c, from: L, to: L + 1,
                  apply: st => { st.reg[i] = L + 1; } });
     });
+
+    // Upgrade Telescope: level k makes the k-th Star available, which then starts at level 1.
+    function telescopeUpgrade(u, i) {
+      const L = state.reg[i] || 0, k = L + 1;
+      if (L >= u.max) { unavailable.push(u.name + ': maxed'); return; }
+      if (k > unlockOrderLength()) { unavailable.push(u.name + ' ' + L + '→' + k + ': no Star left to unlock'); return; }
+      const c = u.ssCost[k];
+      if (c == null) { unavailable.push(u.name + ' ' + L + '→' + k + ': paid in veins, not comparable'); return; }
+      const names = unlockCandidates(k, state);
+      if (!names.length) { unavailable.push(u.name + ' ' + L + '→' + k + ': every possible Star is already unlocked'); return; }
+      consider({ label: u.name, kind: 'tele', currency: 'Super Star', cost: c, from: L, to: k,
+                 detail: names.length === 1 ? 'unlocks ' + names[0] : 'unlocks one of ' + names.join(' / ') + ' (random, average)',
+                 variants: names.map(n => st => { st.reg[i] = k; st.lvl[n] = 1; }) });
+    }
 
     const useful = rows.filter(r => r.gain > 1e-12 && isFinite(r.hours)).sort((a, b) => b.score - a.score);
     const useless = rows.filter(r => !(r.gain > 1e-12)).map(r => r.label);

@@ -56,6 +56,12 @@
     { name: 'Hydra',       base: 48, cost: { base: 125e12, g: 1.25, max: 50, floor: true }, perks: [] },
   ];
 
+  // Order in which Stars become available: the star unlocked by the k-th Telescope level is UNLOCK_ORDER[k-1].
+  // Aries, Taurus, Gemini come first; the 4th-11th are a random permutation of RANDOM_GROUP; the rest is fixed.
+  IOM.FIXED_START = ['Aries', 'Taurus', 'Gemini'];
+  IOM.RANDOM_GROUP = ['Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius'];
+  IOM.FIXED_END = ['Pisces', 'Ophiuchus', 'Orion', 'Hercules', 'Draco', 'Cetus', 'Phoenix', 'Eridanus', 'Lynx', 'Vulpecula', 'Corvus', 'Hydra'];
+
   // Extra cap granted by Super Star "cap" upgrades.
   IOM.CAP_GROUPS = {
     agc: ['Aries', 'Gemini', 'Cancer'],      // +2 per level
@@ -67,7 +73,9 @@
   // all other levels are paid in veins, which this tool cannot compare.
   // ssCost: level -> Super Star cost (levels not listed are paid in veins).
   IOM.REG_UPGRADES = [
-    { name: 'Upgrade Telescope', max: 23 },
+    // Each level makes the next Star available (it then starts at level 1 once unlocked with gems).
+    // Only levels 5, 9 and 12 are paid in Super Stars (10 / 100 / 500); the others use veins.
+    { name: 'Upgrade Telescope', max: 23, unlocksStar: true, ssCost: { 5: 10, 9: 100, 12: 500 } },
     { name: 'Auto-catch Stars',      max: 15, tele: 0,  ssCost: { 5: 10, 10: 25, 15: 50 },
       effects: [{ stat: 'star_auto_catch_chance', per: 4, kind: 'add' }] },
     { name: 'Star Spawn Rate',       max: 20, tele: 0,  ssCost: { 5: 10, 10: 25, 15: 50 },
