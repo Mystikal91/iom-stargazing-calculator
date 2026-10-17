@@ -60,6 +60,8 @@
     base = Object.assign({}, data.base);
     state = { lvl: Object.assign({}, data.state.lvl), reg: data.state.reg.slice(), ss: data.state.ss.slice() };
     caps = M.defaultCaps(state);
+    $('speed').value = +base.game_speed_multi.toPrecision(8);
+    $('speed').classList.toggle('edited', data.missing.includes('game_speed_multi'));
     $('ctrlf').value = 'yes';
     $('ctrlf-hint').textContent = 'Without following, offline Star gains are 1/5.' +
       (data.ctrlF ? '' : ' Your export shows you do not own the skill (skill tree node 38 is 0).');
@@ -84,6 +86,7 @@
   function buildEditors() {
     const grid = $('stat-grid'); grid.innerHTML = '';
     for (const [key, label] of IOM.STAT_INFO) {
+      if (key === 'game_speed_multi') continue; // edited in the settings card
       const l = document.createElement('label');
       l.textContent = label;
       const orig = data.base[key];
@@ -171,6 +174,10 @@
       e.target.value = '';
     });
     $('btn-clear').addEventListener('click', () => { $('json-input').value = ''; setStatus(''); importText(''); save(); });
+    $('speed').addEventListener('input', () => {
+      const v = parseFloat($('speed').value);
+      if (data && v > 0) { base.game_speed_multi = v; $('speed').classList.toggle('edited', v !== data.base.game_speed_multi); render(); }
+    });
     ['floors', 'catch', 'mode', 'ctrlf'].forEach(id => $(id).addEventListener('input', render));
     document.querySelectorAll('input[name=metric]').forEach(r => r.addEventListener('change', render));
 

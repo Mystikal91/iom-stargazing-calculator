@@ -109,26 +109,47 @@
   ];
 
   // ---- Super Star upgrades ---------------------------------------------------
-  // Order matches `stars_super_star_upgrades_array` (22 entries). Only those relevant to Star income are modelled.
-  // cost: 'exp' -> base * g^(L-1);  'formula' -> base * (g + (L-1)*0.01)^(L-1)   (rounded)
-  IOM.SS_UPGRADES = {
-    5:  { name: 'Star Level Caps +1',        max: 2,  tele: 0,  cap: true, cost: { type: 'exp', base: 1500, g: 4.6 } },
-    6:  { name: 'Aries, Gemini, Cancer Cap +2', max: 3, tele: 0, cap: true, cost: { type: 'exp', base: 2000, g: 1.75 } },
-    7:  { name: 'Virgo, Aquarius, Ophiuchus Cap +1', max: 3, tele: 0, cap: true, cost: { type: 'exp', base: 3500, g: 1.75, ov: { 3: 9750 } } },
-    8:  { name: 'Supergiant Star Multiplier +10%', max: 20, tele: 14, cost: { type: 'exp', base: 3000, g: 1.3 },
-          effects: [{ stat: 'star_supergiant_multi', per: 0.10, kind: 'mult' }] },
-    14: { name: 'Novagiant Combo Multiplier +2%', max: 15, tele: 18, cost: { type: 'exp', base: 1150000, g: 1.35 },
-          effects: [{ stat: 'novagiant_combo_multi', per: 0.02, kind: 'mult' }] },
-    18: { name: 'Star Radiant Chance +0.1%', max: 20, tele: 19, cost: { type: 'formula', base: 4750000, g: 1.3 },
-          effects: [{ stat: 'star_radiant_chance', per: 0.1, kind: 'add' }] },
-  };
+  // Order matches `stars_super_star_upgrades_array` (22 entries) and the wiki table.
+  //   unlock: levels needed in the PREVIOUS upgrade of this list before the first level of this one can be bought
+  //   tele:   Telescope level required
+  //   cost:   'exp' -> base * g^(L-1);  'formula' -> base * (g + (L-1)*0.01)^(L-1)  (rounded), ov = per-level overrides
+  //   cap:    only changes Star level caps (no direct income effect)
+  IOM.SS_UPGRADES = [
+    { name: 'Rainbow Vein Chance',        max: 10, tele: 0,  unlock: 0,  cost: { type: 'exp', base: 15, g: 1.3 } },
+    { name: 'Double Contract Points',     max: 10, tele: 0,  unlock: 5,  cost: { type: 'exp', base: 20, g: 1.3 } },
+    { name: 'Experience Gain',            max: 10, tele: 0,  unlock: 5,  cost: { type: 'exp', base: 25, g: 1.3 } },
+    { name: 'Item Duration',              max: 10, tele: 0,  unlock: 5,  cost: { type: 'exp', base: 30, g: 1.3 } },
+    { name: 'Game Speed +2%',             max: 10, tele: 0,  unlock: 5,  cost: { type: 'exp', base: 150, g: 1.3 },
+      effects: [{ stat: 'game_speed_multi', per: 0.02, kind: 'mult' }] },
+    { name: 'Star Level Caps +1',         max: 2,  tele: 0,  unlock: 5,  cost: { type: 'exp', base: 1500, g: 4.6 }, cap: true },
+    { name: 'Aries, Gemini, Cancer Cap +2', max: 3, tele: 0, unlock: 2,  cost: { type: 'exp', base: 2000, g: 1.75 }, cap: true },
+    { name: 'Virgo, Aquarius, Ophiuchus Cap +1', max: 3, tele: 0, unlock: 3, cost: { type: 'exp', base: 3500, g: 1.75, ov: { 3: 9750 } }, cap: true },
+    { name: 'Supergiant Star Multiplier +10%', max: 20, tele: 14, unlock: 3, cost: { type: 'exp', base: 3000, g: 1.3 },
+      effects: [{ stat: 'star_supergiant_multi', per: 0.10, kind: 'mult' }] },
+    { name: 'Golden Ore Multiplier',      max: 15, tele: 17, unlock: 15, cost: { type: 'exp', base: 50000, g: 1.25 } },
+    { name: 'Banked Freebies & Lootbugs', max: 5,  tele: 17, unlock: 5,  cost: { type: 'exp', base: 100000, g: 1.3 } },
+    { name: 'Elixir & Void Grade Cap',    max: 5,  tele: 17, unlock: 5,  cost: { type: 'exp', base: 175000, g: 1.3 } },
+    { name: 'Unlock the Black Hole',      max: 1,  tele: 18, unlock: 5,  cost: { type: 'exp', base: 2500000, g: 1 } },
+    { name: 'Lootbug Loot Multiplier',    max: 20, tele: 18, unlock: 1,  cost: { type: 'exp', base: 875000, g: 1.35 } },
+    { name: 'Novagiant Combo Multiplier +2%', max: 15, tele: 18, unlock: 5, cost: { type: 'exp', base: 1150000, g: 1.35 },
+      effects: [{ stat: 'novagiant_combo_multi', per: 0.02, kind: 'mult' }] },
+    { name: 'Fish Income Multiplier',     max: 15, tele: 18, unlock: 5,  cost: { type: 'exp', base: 1350000, g: 1.35 } },
+    { name: 'Galactic Floor Chance',      max: 20, tele: 19, unlock: 5,  cost: { type: 'formula', base: 2750000, g: 1.3 } },
+    { name: 'Golden Ore Chance',          max: 20, tele: 19, unlock: 5,  cost: { type: 'formula', base: 3500000, g: 1.3 } },
+    { name: 'Star Radiant Chance +0.1%',  max: 20, tele: 19, unlock: 5,  cost: { type: 'formula', base: 4750000, g: 1.3 },
+      effects: [{ stat: 'star_radiant_chance', per: 0.1, kind: 'add' }] },
+    // unlock level of the next one is "???" on the wiki; 5 assumed like its neighbours.
+    { name: 'Galactic Portal Multi',      max: 20, tele: 20, unlock: 5,  cost: { type: 'formula', base: 425000000, g: 1.3 } },
+    { name: 'Arcanist Mana Regen',        max: 20, tele: 21, unlock: 5,  cost: { type: 'formula', base: 875000000, g: 1.3 } },
+    { name: 'Unlock Spell: Blue Giant',   max: 1,  tele: 21, unlock: 5,  cost: { type: 'formula', base: 10000000000, g: 1 } },
+  ];
 
   // ---- Stats -------------------------------------------------------------------
   // kind 'add'  : chance in percent, bonuses from every menu add up
   // kind 'mult' : multiplier, Stargazing bonuses are additive with each other (inside a group) and
   //               multiply the value from other menus. Stats not in this list are not modelled.
   IOM.STAT_KIND = {
-    star_spawn_rate: 'mult', super_star_spawn_multi: 'mult', all_star_multi: 'mult', novagiant_combo_multi: 'mult',
+    game_speed_multi: 'mult', star_spawn_rate: 'mult', super_star_spawn_multi: 'mult', all_star_multi: 'mult', novagiant_combo_multi: 'mult',
     star_radiant_multi: 'mult', super_star_radiant_multi: 'mult',
     star_supergiant_multi: 'mult', super_star_supergiant_multi: 'mult',
     star_auto_catch_chance: 'add', star_double_spawn_chance: 'add', star_triple_spawn_chance: 'add',
@@ -141,6 +162,7 @@
 
   // Stats read from the export, with a label and a default used when the key is missing.
   IOM.STAT_INFO = [
+    ['game_speed_multi', 'Game Speed Multiplier', 1],
     ['star_spawn_rate', 'Star Spawn Rate Multiplier', 1],
     ['star_auto_catch_chance', 'Star Auto-Catch Chance (%)', 0],
     ['star_double_spawn_chance', 'Star Double Spawn Chance (%)', 0],

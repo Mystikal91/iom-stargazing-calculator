@@ -39,7 +39,11 @@
       <div class="grid">
         <label>Floor clears per minute
           <input type="number" inputmode="decimal" id="floors" min="0.01" step="any" value="48">
-          <small>Base game speed is 48 floors/min. Only changes the displayed hours, not the ranking.</small>
+          <small>Base rate is 48 floors/min at 1.0x speed. Only changes the displayed hours, not the ranking.</small>
+        </label>
+        <label>Game speed multiplier
+          <input type="number" inputmode="decimal" id="speed" min="0.01" step="any" value="1">
+          <small>Read from your export and multiplied with the floors/min above. The Super Star "Game Speed" upgrade is ranked too.</small>
         </label>
         <label>Play mode
           <select id="mode">
@@ -105,6 +109,7 @@
           <li>Offline = the same calculation with auto-catch only, multiplied by 0.85 (it scales both rates equally, so it only changes times).</li>
           <li>Offline with the Ctrl+F skill assumes all 5 floors of your Star are unlocked; the wiki scales gains by (floors unlocked / 5), which this tool does not know.</li>
           <li>You follow your Star every rotation (full gain). Every Star currency is collected at the same rate.</li>
+          <li>The first level of a Super Star upgrade needs levels in the previous upgrade of the list (5 for most). When you have not reached them, the cost shown is the cumulative cost of that whole unlock chain, and the gain includes any income bonus from the chain (e.g. Game Speed). The &ldquo;Galactic Portal Multi&rdquo; requirement is unknown on the wiki and assumed to be 5.</li>
           <li>Upgrade Telescope is ranked only for the levels paid in Super Stars (5, 9 and 12). It makes the next Star available at level 1; when that Star is random (4th&ndash;11th) the gain is averaged over the Stars you do not have yet. The gem cost to unlock the Star itself is not included.</li>
           <li>Telescope upgrades paid in veins cannot be compared and are listed as not ranked. Cosmic Candy is not modelled.</li>
         </ul>

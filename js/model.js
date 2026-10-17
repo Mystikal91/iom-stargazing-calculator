@@ -24,7 +24,7 @@
 
   function ssUpgradeCost(idx, level) {
     const u = IOM.SS_UPGRADES[idx], c = u.cost;
-    if (level < 1 || level > u.max) return null;
+    if (level < 1 || level > u.max) return 0;
     if (c.ov && c.ov[level] != null) return c.ov[level];
     const n = level - 1;
     return Math.round(c.type === 'formula' ? c.base * Math.pow(c.g + n * 0.01, n) : c.base * Math.pow(c.g, n));
@@ -84,7 +84,7 @@
     const pSuper = Math.min(1, S.super_star_spawn_multi / 100);
     const t3 = clamp01(S.super_star_triple_chance / 100), t10 = clamp01(S.super_star_10x_chance / 100);
     const superPerSpawn = (1 + 2 * t3) * (1 + 9 * t10); // assumed independent like Double/Triple Star
-    const F = opts.floorsPerHour;
+    const F = opts.floorsPerHour * S.game_speed_multi; // floor clears/h: base rate x game speed
     return {
       stars: penalty * F * pSpawn * starsPerSpawn * catchP * tierValue(S, 'star_'),
       superStars: penalty * F * pSpawn * pSuper * superPerSpawn * catchP * tierValue(S, 'super_star_'),
@@ -154,6 +154,28 @@
     return [IOM.FIXED_END[k - b - 1]].filter(n => n && !state.lvl[n]);
   }
 
+  // ---- Super Star unlock chain -------------------------------------------------
+  /**
+   * Purchases needed to bring Super Star upgrade `i` to `target`, given the current levels `ss`.
+   * Returns [{idx, from, to, cost}] (prerequisites first) or null if impossible.
+   */
+  function ssPlan(i, target, ss) {
+    const lv = ss.slice(), out = [];
+    function buy(j, to) {
+      const u = IOM.SS_UPGRADES[j];
+      if (to > u.max) return false;
+      if ((lv[j] || 0) === 0 && j > 0 && !need(j - 1, u.unlock)) return false;
+      const from = lv[j] || 0;
+      let cost = 0;
+      for (let l = from + 1; l <= to; l++) cost += ssUpgradeCost(j, l);
+      out.push({ idx: j, from, to, cost });
+      lv[j] = to;
+      return true;
+    }
+    function need(j, level) { return (lv[j] || 0) >= level ? true : buy(j, level); }
+    return buy(i, target) ? out : null;
+  }
+
   // ---- Candidate upgrades ---------------------------------------------------
   /**
    * opts: { metric: 'stars'|'superStars', floorsPerHour, catchMode, offline, ctrlF }
@@ -199,18 +221,21 @@
                  apply: st => { st.lvl[s.name] = to; } });
     }
 
-    // Super Star priced upgrades
-    Object.keys(IOM.SS_UPGRADES).forEach(i => {
-      const u = IOM.SS_UPGRADES[i];
-      if (u.cap) return;
+    // Super Star priced upgrades. The first level of an upgrade needs N levels of the previous one in the list,
+    // recursively, so the cost (and the benefit) of that whole unlock chain is included.
+    IOM.SS_UPGRADES.forEach((u, i) => {
+      if (u.cap || !u.effects) return;
       const L = state.ss[i] || 0;
       if (L >= u.max) { unavailable.push(u.name + ': maxed'); return; }
-      if (tele < u.tele) { unavailable.push(u.name + ': needs Telescope ' + u.tele + ' (you have ' + tele + ')'); return; }
-      const to = Math.min(u.max, L + 1);
-      let cost = 0;
-      for (let l = L + 1; l <= to; l++) cost += ssUpgradeCost(i, l);
-      consider({ label: u.name, kind: 'ss', currency: 'Super Star', cost, from: L, to,
-                 apply: st => { st.ss[i] = to; } });
+      const plan = ssPlan(i, L + 1, state.ss);
+      if (!plan) { unavailable.push(u.name + ': unlock chain impossible'); return; }
+      const needTele = Math.max.apply(null, plan.map(p => IOM.SS_UPGRADES[p.idx].tele));
+      if (tele < needTele) { unavailable.push(u.name + ': needs Telescope ' + needTele + ' (you have ' + tele + ')'); return; }
+      const cost = plan.reduce((t, p) => t + p.cost, 0);
+      const pre = plan.filter(p => p.idx !== i);
+      consider({ label: u.name, kind: 'ss', currency: 'Super Star', cost, from: L, to: L + 1,
+                 detail: pre.length ? 'includes unlocking: ' + pre.map(p => IOM.SS_UPGRADES[p.idx].name + ' ' + p.from + '→' + p.to).join(', ') : '',
+                 apply: st => { plan.forEach(p => { st.ss[p.idx] = p.to; }); } });
     });
 
     // Telescope upgrades: only the levels paid in Super Stars can be compared.
