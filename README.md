@@ -52,7 +52,7 @@ No build step and no dependencies. To run locally, open `index.html`, or serve t
 
 Star costs follow the wiki's `CostTable` parameters (base, scaling, per-level overrides), transcribed in `js/data.js`.
 Data comes from the [Stargazing](https://shminer.miraheze.org/wiki/Stargazing) and [Stats](https://shminer.miraheze.org/wiki/Stats#Stars)
-wiki pages (game v2.2.30). When the game changes, update the corresponding entries in `data.js`.
+wiki pages (game v2.2.51). When the game changes, update the corresponding entries in `data.js`.
 
 ## AI Usage
 

@@ -1,4 +1,4 @@
-/* Static game data, transcribed from https://shminer.miraheze.org/wiki/Stargazing (game v2.2.30)
+/* Static game data, transcribed from https://shminer.miraheze.org/wiki/Stargazing (game v2.2.51)
  * and https://shminer.miraheze.org/wiki/Stats#Stars.
  *
  * Star costs follow the wiki's {{CostTable}} template:
@@ -77,7 +77,7 @@
     // Only levels 5, 9 and 12 are paid in Super Stars (10 / 100 / 500); the others use veins.
     { name: 'Upgrade Telescope', max: 23, unlocksStar: true, ssCost: { 5: 10, 9: 100, 12: 500 } },
     { name: 'Auto-catch Stars',      max: 15, tele: 0,  ssCost: { 5: 10, 10: 25, 15: 50 },
-      effects: [{ stat: 'star_auto_catch_chance', per: 4, kind: 'add' }] },
+      effects: [{ stat: 'star_auto_catch_chance', per: 3, kind: 'add' }] }, // was +4% before v2.2.51 (the rest moved to an Obelisk-level bonus, already in the export)
     { name: 'Star Spawn Rate',       max: 20, tele: 0,  ssCost: { 5: 10, 10: 25, 15: 50 },
       effects: [{ stat: 'star_spawn_rate', per: 0.05, kind: 'mult' }] },
     { name: 'Double Star Chance',    max: 20, tele: 0,  ssCost: { 5: 10, 10: 25, 15: 50 },
